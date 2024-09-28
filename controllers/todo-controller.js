@@ -1,23 +1,19 @@
 const Todo = require('../model/Todo');
 
-// Get all todos for a specific user
+// Get all todos
 exports.getTodos = async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const todos = await Todo.find({ userId }).sort({ createdAt: -1 });
+    const todos = await Todo.find().sort({ createdAt: -1 });
     res.json(todos);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching todos' });
   }
 };
 
-// Create a new todo for a specific user
+// Create a new todo
 exports.createTodo = async (req, res) => {
   try {
-    const newTodo = new Todo({
-      ...req.body,
-      userId: req.params.userId
-    });
+    const newTodo = new Todo(req.body);
     const savedTodo = await newTodo.save();
     res.status(201).json(savedTodo);
   } catch (err) {
@@ -25,16 +21,12 @@ exports.createTodo = async (req, res) => {
   }
 };
 
-// Update a todo (ensure it belongs to the user)
+// Update a todo
 exports.updateTodo = async (req, res) => {
   try {
-    const updatedTodo = await Todo.findOneAndUpdate(
-      { _id: req.params.id, userId: req.params.userId },
-      req.body,
-      { new: true }
-    );
+    const updatedTodo = await Todo.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updatedTodo) {
-      return res.status(404).json({ message: 'Todo not found or not authorized' });
+      return res.status(404).json({ message: 'Todo not found' });
     }
     res.json(updatedTodo);
   } catch (err) {
@@ -42,12 +34,12 @@ exports.updateTodo = async (req, res) => {
   }
 };
 
-
+// Delete a todo
 exports.deleteTodo = async (req, res) => {
   try {
-    const deletedTodo = await Todo.findOneAndDelete({ _id: req.params.id, userId: req.params.userId });
+    const deletedTodo = await Todo.findByIdAndDelete(req.params.id);
     if (!deletedTodo) {
-      return res.status(404).json({ message: 'Todo not found or not authorized' });
+      return res.status(404).json({ message: 'Todo not found' });
     }
     res.json({ message: 'Todo deleted successfully' });
   } catch (err) {
